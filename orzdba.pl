@@ -115,6 +115,8 @@ my %mystat1 =
         "Innodb_rows_deleted" => 0 ,
         "Innodb_rows_read" => 0,
         "Threads_created" => 0,
+        "Threadpool_idle_threads" => 0,
+        "Threadpool_threads" => 0,
         "Bytes_received" => 0,
         "Bytes_sent" => 0,
         "Innodb_buffer_pool_pages_flushed" => 0,
@@ -464,8 +466,8 @@ sub get_options{
       $mysql_headline2 .= "  list| uflog  ufpage uckpt| hash no_hash| view inside queue|";
     }
     if($threads){
-      $mysql_headline1 .= "------threads------ ";
-      $mysql_headline2 .= " run  con  cre  cac|";
+      $mysql_headline1 .= "--------threads-------- ";
+      $mysql_headline2 .= " act  run  con  cre  cac|";
     }
     if($bytes){
       $mysql_headline1 .= "-----bytes---- ";
@@ -799,7 +801,7 @@ sub get_sysinfo{
 sub get_mysqlstat{
   if($mysql) {
     my %mystat2 ;
-    my $mysql = qq{$MYSQL -e 'show global status where Variable_name in ("Com_select","Com_insert","Com_update","Com_delete","Innodb_buffer_pool_read_requests","Innodb_buffer_pool_reads","Innodb_rows_inserted","Innodb_rows_updated","Innodb_rows_deleted","Innodb_rows_read","Threads_running","Threads_connected","Threads_cached","Threads_created","Bytes_received","Bytes_sent","Innodb_buffer_pool_pages_data","Innodb_buffer_pool_pages_free","Innodb_buffer_pool_pages_dirty","Innodb_buffer_pool_pages_flushed","Innodb_data_reads","Innodb_data_writes","Innodb_data_read","Innodb_data_written","Innodb_os_log_fsyncs","Innodb_os_log_written","Com_commit","Com_rollback","Innodb_dblwr_pages_written","Innodb_dblwr_writes")'};
+    my $mysql = qq{$MYSQL -e 'show global status where Variable_name in ("Com_select","Com_insert","Com_update","Com_delete","Innodb_buffer_pool_read_requests","Innodb_buffer_pool_reads","Innodb_rows_inserted","Innodb_rows_updated","Innodb_rows_deleted","Innodb_rows_read","Threads_running","Threads_connected","Threads_cached","Threads_created","Bytes_received","Bytes_sent","Innodb_buffer_pool_pages_data","Innodb_buffer_pool_pages_free","Innodb_buffer_pool_pages_dirty","Innodb_buffer_pool_pages_flushed","Innodb_data_reads","Innodb_data_writes","Innodb_data_read","Innodb_data_written","Innodb_os_log_fsyncs","Innodb_os_log_written","Com_commit","Com_rollback","Innodb_dblwr_pages_written","Innodb_dblwr_writes","Threadpool_idle_threads","Threadpool_threads")'};
     #print YELLOW(),$mysql,RESET();
     open MYSQL_STAT,"$mysql|" or die "Can't connect to mysql!";
     while (my $line = <MYSQL_STAT>) {
@@ -909,10 +911,10 @@ sub get_mysqlstat{
         print $LOG_OUT WHITE();
         printf $LOG_OUT "%7d ",$Innodb_dblwr_writes_diff;
 
-        $Innodb_dblwr_written_diff/1024/1024 > 9 ? print $LOG_OUT RED() : print $LOG_OUT WHITE();
-        $Innodb_dblwr_written_diff/1024/1024 > 1 ?
-        printf $LOG_OUT "%5.1fm",($Innodb_dblwr_written_diff/1024/1024):
-        printf $LOG_OUT "%7s",($Innodb_dblwr_written_diff/1024 > 1 ? int($Innodb_dblwr_written_diff/1024 + 0.5)."k":$Innodb_dblwr_written_diff);
+        $Innodb_dblwr_written_diff*16/1024 > 9 ? print $LOG_OUT RED() : print $LOG_OUT WHITE();
+        $Innodb_dblwr_written_diff*16/1024 > 1 ?
+        printf $LOG_OUT "%6.1fm",($Innodb_dblwr_written_diff*16/1024):
+        printf $LOG_OUT "%7s",($Innodb_dblwr_written_diff*16 > 1 ? int($Innodb_dblwr_written_diff*16 + 0.5)."k":$Innodb_dblwr_written_diff);
 
         print $LOG_OUT GREEN(),"|",RESET();
       }
@@ -958,9 +960,18 @@ sub get_mysqlstat{
      }
 
      if ($threads) {
-       print $LOG_OUT WHITE();
-       printf $LOG_OUT "%4d %4d %4d %4d",$mystat2{"Threads_running"},$mystat2{"Threads_connected"},$threads_created_diff,$mystat2{"Threads_cached"};
-       print $LOG_OUT GREEN(),"|",RESET();
+       if (defined($mystat1{"Threadpool_threads"})){
+         my $active_thread_count     = ( $mystat1{"Threadpool_threads"}   - $mystat1{"Threadpool_idle_threads"} ) / $interval;
+         print $LOG_OUT WHITE();
+         printf $LOG_OUT "%4d %4d %4d %4d %4d",$active_thread_count,$mystat2{"Threads_running"},$mystat2{"Threads_connected"},$threads_created_diff,$mystat2{"Threads_cached"};
+         print $LOG_OUT GREEN(),"|",RESET();
+       }
+       else{
+         my  $active_thread_count     = $mystat2{"Threads_running"};
+         print $LOG_OUT WHITE();
+         printf $LOG_OUT "%4d %4d %4d %4d %4d",$active_thread_count,$mystat2{"Threads_running"},$mystat2{"Threads_connected"},$threads_created_diff,$mystat2{"Threads_cached"};
+         print $LOG_OUT GREEN(),"|",RESET();
+       }
      }
 
      if ($bytes) {
@@ -1031,7 +1042,7 @@ sub get_mysqlstat{
 
      if ($threads) {
        print $LOG_OUT WHITE();
-       printf $LOG_OUT "%4d %4d %4d %4d",0,0,0,0;
+       printf $LOG_OUT "%4d %4d %4d %4d %4d",0,0,0,0,0;
        print $LOG_OUT GREEN(),"|",RESET();
      }
 
