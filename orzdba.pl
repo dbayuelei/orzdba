@@ -463,7 +463,7 @@ sub get_options{
     }
     if($innodb_status){
       $mysql_headline1 .= "--his-- -----log(byte)----- --hash index-- -read- ---query--- ";
-      $mysql_headline2 .= "  list| uflog  ufpage uckpt| hash no_hash| view inside queue|";
+      $mysql_headline2 .= "  list| uflog  ufpage uckpt|  hash nohash| view inside queue|";
     }
     if($threads){
       $mysql_headline1 .= "--------threads-------- ";
