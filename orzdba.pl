@@ -430,8 +430,8 @@ sub get_options{
       $headline2 .= "   recv   send|";
     }
     if($disk){
-      $headline1 .= "-------------------------------io-usage[$disk]---------------------------- ";
-      $headline2 .= "      r/s     w/s   rMB/s  wMB/s queue r_await w_await await svctm \%util|";
+      $headline1 .= "-----------------------------io-usage[$disk]--------------------------- ";
+      $headline2 .= "    r/s    w/s  rMB/s  wMB/s queue r_await w_await await svctm \%util|";
     }
     if($com){
       $mysql_headline1 .= "                   -QPS- -TPS- "; 
@@ -758,12 +758,12 @@ sub get_sysinfo{
       # printf "%7.1f %7.1f %5.1f %6.1f %5.1f %5.1f",$rkbs,$wkbs,$queue,$wait,$svc_t,$busy ;
       # color print wait/svc_t/busy info
       print $LOG_OUT WHITE();
-      printf $LOG_OUT "%9.2f%9.2f",$rd_ios_s,$wr_ios_s and print $LOG_OUT RESET();
+      printf $LOG_OUT "%7d%7d",$rd_ios_s,$wr_ios_s and print $LOG_OUT RESET();
 
       $rkbs > 1024 ? print $LOG_OUT RED() : print $LOG_OUT WHITE();
-      printf $LOG_OUT "%6.2f",$rkbs and print $LOG_OUT RESET();
+      printf $LOG_OUT "%6d",$rkbs and print $LOG_OUT RESET();
       $wkbs > 1024 ? print $LOG_OUT RED() : print $LOG_OUT WHITE();
-      printf $LOG_OUT " %6.2f",$wkbs and print $LOG_OUT RESET();
+      printf $LOG_OUT " %6d",$wkbs and print $LOG_OUT RESET();
       print $LOG_OUT WHITE() ;
       printf $LOG_OUT " %6.2f",$queue;
       $r_await>5  ? print $LOG_OUT RED() : print $LOG_OUT GREEN();
